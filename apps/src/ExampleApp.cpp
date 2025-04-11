@@ -49,6 +49,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PetscException.hpp"
 
 #include "Hello.hpp"
+#include "VertexBoundaryRefinementModifier.hpp"
 
 int main(int argc, char *argv[])
 {
