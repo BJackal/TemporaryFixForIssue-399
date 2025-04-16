@@ -131,7 +131,6 @@ void VertexBoundaryRefinementModifier<DIM>::RefineEdges(AbstractCellPopulation<D
                         } 
                         else if (norm_2(edge) < mMinEdgeLength)
                         {
-                            std::cout << "7 \n";
                             // Check to make sure we don't delete a node that is a vertex, only a free boundary node
                             if(node_a_elem_indices.size() >= 2)
                             {
