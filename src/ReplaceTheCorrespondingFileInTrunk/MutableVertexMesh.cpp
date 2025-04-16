@@ -1502,6 +1502,7 @@ void MutableVertexMesh<ELEMENT_DIM, SPACE_DIM>::IdentifySwapType(
 
                             // Tag remaining node as non-boundary
                             p_merged_node->SetAsBoundaryNode(false);
+                            p_merged_node->SetRadius(pNodeA->GetRadius());
 
                             // Now merge this node with one of the nearest vertices keeping that vertices location.
                             Node<SPACE_DIM>* p_end_node; // The neighbouring vertex to merge to
@@ -2435,8 +2436,12 @@ void MutableVertexMesh<ELEMENT_DIM, SPACE_DIM>::PerformT2Swap([[maybe_unused]] V
                 break;
             }
         }
+        // The new node needs to inherit the parent nods radius TODO: currentlly just setting this as the first node in the element
+        // However this will need to be modified somehow if the radius is not homogenous.
+        double radius = rElement.GetNode(0)->GetRadius();
         unsigned new_node_global_index = this->AddNode(new Node<SPACE_DIM>(GetNumNodes(), new_node_location, is_node_on_boundary));
         Node<SPACE_DIM>* p_new_node = this->GetNode(new_node_global_index);
+        p_new_node->SetRadius(radius);
 
         std::set<unsigned> neigh_indices;
 
@@ -3496,6 +3501,7 @@ void MutableVertexMesh<ELEMENT_DIM, SPACE_DIM>::PerformVoidRemoval(
 
         // Tag remaining node as non-boundary
         p_merged_node->SetAsBoundaryNode(false);
+        p_merged_node->SetRadius(pNodeA->GetRadius());
 
         // Remove the deleted nodes and re-index
         RemoveDeletedNodes();
