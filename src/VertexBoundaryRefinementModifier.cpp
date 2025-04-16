@@ -41,8 +41,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<unsigned DIM>
 VertexBoundaryRefinementModifier<DIM>::VertexBoundaryRefinementModifier()
     : AbstractCellBasedSimulationModifier<DIM>(),
-      mMaxEdgeLength(0.10),
-      mMinEdgeLength(0.015) // Note: must be <= mCellRearrangementThreshold
+      mMaxEdgeLength(0.2),
+      mMinEdgeLength(0.019) // Note: must be <= mCellRearrangementThreshold
 {
 }
 
@@ -88,7 +88,8 @@ void VertexBoundaryRefinementModifier<DIM>::RefineEdges(AbstractCellPopulation<D
             elem_iter != p_mesh->GetElementIteratorEnd();
             ++elem_iter)
         {
-
+          // This operation should only be performed on elements which exist on the boundary  
+          if(elem_iter->IsElementOnBoundary()){
             for (unsigned node_local_index = 0; node_local_index < elem_iter->GetNumNodes(); node_local_index++)
             {
                 unsigned next_node_local_index = (node_local_index+1) % (elem_iter->GetNumNodes());
@@ -107,33 +108,39 @@ void VertexBoundaryRefinementModifier<DIM>::RefineEdges(AbstractCellPopulation<D
 
                     // Find common elements
                     std::set<unsigned> shared_elements;
+
                     std::set_intersection(node_a_elem_indices.begin(),
                             node_a_elem_indices.end(),
                             node_b_elem_indices.begin(),
                             node_b_elem_indices.end(),
-                            std::inserter(shared_elements, shared_elements.begin()));
+                            std::inserter(shared_elements, shared_elements.begin()));          
 
-                    // assert(shared_elements.size()>0); //otherwise not in the same element at all 
+                    //assert(shared_elements.size()>0); // TODO This assertion fails randomly so needs more testing
 
                     if(shared_elements.size() == 1)
                     {
                         // Here we have a boundary edge so add new node if needed.
                         c_vector<double,DIM> edge = p_mesh->GetVectorFromAtoB(p_node_a->rGetLocation(),p_node_b->rGetLocation());
-                        
+
                         if (norm_2(edge) > mMaxEdgeLength)
                         {
                             p_mesh->DivideEdge(p_node_a, p_node_b);
                             recheck_edges = true;
+                            // Remeshing needs to be performed here to update mesh information
+                            p_mesh->ReMesh();
                         } 
                         else if (norm_2(edge) < mMinEdgeLength)
                         {
-                            // TRACE("help");
+                            std::cout << "7 \n";
                             // Check to make sure we don't delete a node that is a vertex, only a free boundary node
                             if(node_a_elem_indices.size() >= 2)
                             {
                                 // Delete node
                                 p_mesh->PerformNodeMerge(p_node_a,p_node_b);
                                 p_node_a->SetAsBoundaryNode(true);
+                                
+                                // Remeshing needs to be performed here to update mesh information
+                                p_mesh->ReMesh();
 
                                 recheck_edges = true;
                             }
@@ -142,6 +149,9 @@ void VertexBoundaryRefinementModifier<DIM>::RefineEdges(AbstractCellPopulation<D
                                 p_mesh->PerformNodeMerge(p_node_b,p_node_a);
                                 p_node_b->SetAsBoundaryNode(true);
 
+                                // Remeshing needs to be performed here to update mesh information
+                                p_mesh->ReMesh();
+
                                 recheck_edges = true;
 
                             }
@@ -149,8 +159,8 @@ void VertexBoundaryRefinementModifier<DIM>::RefineEdges(AbstractCellPopulation<D
                     }
                 }
             }
+          }
         }
-        p_mesh->ReMesh();
     }
 
     
@@ -203,4 +213,3 @@ template class VertexBoundaryRefinementModifier<3>;
 // Serialization for Boost >= 1.36
 #include "SerializationExportWrapperForCpp.hpp"
 EXPORT_TEMPLATE_CLASS_SAME_DIMS(VertexBoundaryRefinementModifier)
-
