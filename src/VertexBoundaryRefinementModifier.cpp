@@ -114,8 +114,9 @@ void VertexBoundaryRefinementModifier<DIM>::RefineEdges(AbstractCellPopulation<D
                             node_b_elem_indices.begin(),
                             node_b_elem_indices.end(),
                             std::inserter(shared_elements, shared_elements.begin()));          
-
-                    //assert(shared_elements.size()>0); // TODO This assertion fails randomly so needs more testing
+                   
+                    // Any two boundary nodes in this case should always at least be sharing one element.
+                    assert(shared_elements>=1u);
 
                     if(shared_elements.size() == 1)
                     {
